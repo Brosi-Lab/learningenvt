@@ -9,13 +9,13 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #knitr::opts_chunk$set(root.dir='/tmp')
-setwd("/Users/drmcder/Desktop/R")
+setwd("/Users/drmcder/Desktop/R/Learning Environment Bees")
 require(ggplot2)
 require(dplyr)
 require(readr)
 getwd()
 ```
-Hello from R Studio.
+Hello from R Studio!
 Hello Back from github.
 
 
@@ -100,7 +100,7 @@ How many visits did each bee make in its half hour treatment or test?
 #tbl_df(Full.Treatment1)
 Total.visits=count(Full.Treatment1, bee)
 Total.visits
-#Total_Rewards=Full.Treatment1%>%
+Total_Rewards=Full.Treatment1%>%
   group_by(bee) %>%
   summarise(Rewards=sum(reward))
 #Total_Rewards  
@@ -110,9 +110,9 @@ Total_RV=left_join(Total.visits, Total_Rewards, by="bee")
 index = which(is.na(Total_RV$Rewards))
 Total_RV = Total_RV[-index,]
 colnames(Total_RV)=c("bee", "Treatment.Visits", "Treatment.Rewards")
-#Total_RV
-Avg.Visits=summarise(Total_RV, Treat.visits=mean(n), Treat.reward=mean(Rewards))
-#Avg.Visits
+Total_RV
+Avg.Visits=summarise(Total_RV, Treatment.visits=mean(Treatment.Visits), Treatment.reward=mean(Treatment.Rewards))
+Avg.Visits
 
 
 #Counting visits and rewards during test runs
@@ -130,8 +130,8 @@ index = which(is.na(Total_RV_T$Rewards))
 Total_RV_T = Total_RV_T[-index,]
 colnames(Total_RV_T)=c("bee", "Test.Visits", "Test.Rewards")
 Total_RV_T
-Avg.VisitsT=summarise(Total_RV_T, Test.visits=mean(n), Test.reward=mean(Rewards))
-#Avg.VisitsT
+Avg.VisitsT=summarise(Total_RV_T, Test.visits=mean(Test.Visits), Test.reward=mean(Test.Rewards))
+Avg.VisitsT
 
 AllVisits=left_join(Total_RV,Total_RV_T, by="bee") %>%
   filter(Test.Visits>0)
@@ -175,31 +175,37 @@ Flowers:
 
 Berry's thoughts: instead of doing if statements, create a table of flower ID (both types) and date and color, then merge that onto the columns here
 ```{r}
-Full.Treatment1
+#Adding in table of types of day (test v treatment) to data
 
-# create a new column for "flower.color" to go into
-Full.Treatment1$flower.color = rep(1, nrow(Full.Treatment1))
-Full.Treatment1
-# now write a 'for' loop to change the number when the bee or the date changes
-# basically just a couple of if / else statements...
-# if it is a new bee number, don't need to do anything as number should be one
-for(i in 2:nrow(Full.Treatment1)) {
-  if(Full.Treatment1$date[i]=="2018.7.11") {
-    if(Full.Treatment1$flower[i]=="50124") {
-      Full.Treatment1$flower.color[i]<-"blue"
-    }
-    else {Full.Treatment1$flower.color[i]<-"green"}
-  }
-}
-Full.Treatment1
+Full.Data=rbind(Full.Treatment1, Full.Test1)
+dayDate= select(Full.Data,date) %>%
+  distinct(date) %>%
+  slice(c(1,5,6,8,9,10))
 
+Day=c("treatment","treatment","treatment","test","test","test")
+dayDate=cbind(dayDate,Day)
+dayDate
 
+colors=read.csv("Flower color data Summer SI learning envt trials.csv")
+colors
+
+#need to join dayDate to full trial, then join colors to all of that
+
+Full.Data=left_join(Full.Data,dayDate,by="date") %>%
+  select(-Days)
+Full.Data
+
+#adding in colors
+mayyybe=left_join(Full.Data, colors, by="flower", "Day")
 
 ```
 
 
 
-
+dont think i need this...
+# create a new column for "flower.color" to go into
+Full.Treatment1$flower.color = rep(1, nrow(Full.Treatment1))
+Full.Treatment1
 
 
 
