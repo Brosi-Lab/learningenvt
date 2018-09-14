@@ -15,7 +15,10 @@ require(dplyr)
 require(readr)
 getwd()
 ```
-Hello from R Studio
+Hello from R Studio.
+Hello Back from github.
+
+
 This data was collected in June and July of 2018 to assess how complexity of the environment bees forage in contributes to their ability to remember and apply information. In these trials, 'complexity of environment' was adjusted using social information cues. A complex or 'hard' learning environment included a misleading social information cue (a dead bee pinned to an unrewarding flower(containing only water).) A simple or 'easy' learning environment included a useful social information cue (a dead bee pinned to a rewarding flower([sugar]=1 M)). A control environment with no social information cue was also included.
 During the treatment, bees foraged individually in a container that exposed them to two flowers (one rewarding blue flower and an unrewarding green flower) for 30 minutes. 7 or 8 trials ran simultaneously in the foraging chamber.
 During the test, the same bees foraged the next day in the same container as the day before. On this day, both blue and novel violet flowers had equal rewards ([sugar]= 1 M). The test also lasted for 30 minutes, bees were tested independently, and 7 or 8 trials ran simulateously in the chamber at one time. 
