@@ -1,0 +1,206 @@
+---
+title: "Summer 2018 SI Learning Envt Trials"
+author: "Donna"
+date: "August 21, 2018"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(root.dir='/tmp')
+setwd("/Users/drmcder/Desktop/R")
+require(ggplot2)
+require(dplyr)
+require(readr)
+getwd()
+```
+This data was collected in June and July of 2018 to assess how complexity of the environment bees forage in contributes to their ability to remember and apply information. In these trials, 'complexity of environment' was adjusted using social information cues. A complex or 'hard' learning environment included a misleading social information cue (a dead bee pinned to an unrewarding flower(containing only water).) A simple or 'easy' learning environment included a useful social information cue (a dead bee pinned to a rewarding flower([sugar]=1 M)). A control environment with no social information cue was also included.
+During the treatment, bees foraged individually in a container that exposed them to two flowers (one rewarding blue flower and an unrewarding green flower) for 30 minutes. 7 or 8 trials ran simultaneously in the foraging chamber.
+During the test, the same bees foraged the next day in the same container as the day before. On this day, both blue and novel violet flowers had equal rewards ([sugar]= 1 M). The test also lasted for 30 minutes, bees were tested independently, and 7 or 8 trials ran simulateously in the chamber at one time. 
+In both treatments and tests, all bees were taken from the same colony where they are fed ad lib Koppert nectar solution and commercial pollen. Bees were starved for a minimim of two hours before entering foraging chamber. 
+
+```{r knitting data}
+#importing and naming each data set
+Te.1559=read.csv("foragingdata_2018.7.12.1559.csv")
+colnames(Te.1559) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1440=read.csv("foragingdata_2018.7.12.1440.csv")
+colnames(Te.1440) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1500=read.csv("foragingdata_2018.7.11.1500.csv")
+colnames(Tr.1500) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1416=read.csv("foragingdata_2018.7.11.1416.csv")
+colnames(Tr.1416) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1330=read.csv("foragingdata_2018.7.11.1330.csv")
+colnames(Tr.1330) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1705=read.csv("foragingdata_2018.7.5.1705.csv")
+colnames(Te.1705) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1625=read.csv("foragingdata_2018.7.5.1625.csv")
+colnames(Te.1625) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1507=read.csv("foragingdata_2018.7.5.1507.csv")
+colnames(Te.1507) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1438=read.csv("foragingdata_2018.7.4.1438.csv")
+colnames(Tr.1438) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1337=read.csv("foragingdata_2018.7.4.1337.csv")
+colnames(Tr.1337) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1702=read.csv("foragingdata_2018.6.27.1702.csv")
+colnames(Te.1702) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1607=read.csv("foragingdata_2018.6.27.1607.csv")
+colnames(Te.1607) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1518=read.csv("foragingdata_2018.6.27.1518.csv")
+colnames(Te.1518) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1635=read.csv("foragingdata_2018.6.26.1635.csv")
+colnames(Tr.1635) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1518=read.csv("foragingdata_2018.6.26.1518.csv")
+colnames(Tr.1518) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1434=read.csv("foragingdata_2018.6.26.1434.csv")
+colnames(Tr.1434) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+#importing the data set that describes the shapes of flowers, treatment types, etc.
+    #this file has a formula for changing space-separated bee id's into dash-separated bee id names
+bee.info=read.csv("Donna Bombus ID Data w dashes.csv")
+
+#knitting together data sets into "treatment" files 
+Full.Treatment1=rbind(Tr.1500,Tr.1416,Tr.1330,Tr.1438,Tr.1337,Tr.1434,Tr.1518,Tr.1635)
+
+#knitting together data sets into "test" files
+Full.Test1=rbind(Te.1559,Te.1440,Te.1705,Te.1625,Te.1507,Te.1702,Te.1607,Te.1518)
+
+#removing tester flower from both data sets
+Full.Treatment1 =filter(Full.Treatment1, bee !="CE-28-66-01-0B-00-12-E0")
+Full.Treatment1 =filter(Full.Treatment1, bee !="D9-28-66-01-0B-00-12-E0")
+Full.Test1 =filter(Full.Test1, bee !="CE-28-66-01-0B-00-12-E0")
+Full.Test1 =filter(Full.Test1, bee !="D9-28-66-01-0B-00-12-E0")
+
+
+```
+
+How many visits did each bee make in its half hour treatment or test?
+```{r}
+
+#counting visits and rewards during Treatment runs
+#tbl_df(Full.Treatment1)
+Total.visits=count(Full.Treatment1, bee)
+Total.visits
+#Total_Rewards=Full.Treatment1%>%
+  group_by(bee) %>%
+  summarise(Rewards=sum(reward))
+#Total_Rewards  
+
+#Total_Rewards
+Total_RV=left_join(Total.visits, Total_Rewards, by="bee")
+index = which(is.na(Total_RV$Rewards))
+Total_RV = Total_RV[-index,]
+colnames(Total_RV)=c("bee", "Treatment.Visits", "Treatment.Rewards")
+#Total_RV
+Avg.Visits=summarise(Total_RV, Treat.visits=mean(n), Treat.reward=mean(Rewards))
+#Avg.Visits
+
+
+#Counting visits and rewards during test runs
+#tbl_df(Full.Test1)
+Total.visitsT=count(Full.Test1, bee)
+#Total.visitsT
+Total_RewardsT=Full.Test1%>%
+  group_by(bee) %>%
+  summarise(Rewards=sum(reward))
+#Total_RewardsT  
+
+#Total_RewardsT
+Total_RV_T=left_join(Total.visitsT, Total_RewardsT, by="bee")
+index = which(is.na(Total_RV_T$Rewards))
+Total_RV_T = Total_RV_T[-index,]
+colnames(Total_RV_T)=c("bee", "Test.Visits", "Test.Rewards")
+Total_RV_T
+Avg.VisitsT=summarise(Total_RV_T, Test.visits=mean(n), Test.reward=mean(Rewards))
+#Avg.VisitsT
+
+AllVisits=left_join(Total_RV,Total_RV_T, by="bee") %>%
+  filter(Test.Visits>0)
+AllVisits
+Avg.AllVisits=cbind(Avg.Visits, Avg.VisitsT)
+Avg.AllVisits
+```
+
+Organizing total visits by treatment types
+
+side note: formula to add dashes to bee ID numbers in excel is
+=LEFT(B2,2)&"-"&MID(B2,4,2)&"-"&MID(B2,7,2)&"-"&MID(B2,10,2)&"-"&MID(B2,13,2)&"-"&MID(B2,16,2)&"-"&MID(B2,19,2)&"-"&RIGHT(B2,2)  
+
+for some reason, flower and pen read the bee ID's in slightly different formats (pen readings end in 00-00-00, flower readings end in 00-12-E0)
+I got around this by changing the formula in the excel file to
+=LEFT(B2,2)&"-"&MID(B2,4,2)&"-"&MID(B2,7,2)&"-"&MID(B2,10,2)&"-"&MID(B2,13,2)&"-"&MID(B2,16,2)&"-"&"12"&"-"&"E0"
+
+
+```{r}
+BeeData=read.csv("Donna Bombus ID Data w dashes.csv")
+#tbl_df(BeeData)
+#Simple_BeeData=
+ # slice(BeeData,41:109) %>%
+#  group_by(bee)
+
+BeeData=full_join(AllVisits, BeeData, by="bee")
+BeeData
+select(BeeData, bee:Treatment_Type) %>%
+  slice(1:50) %>%
+  group_by(Treatment_Type) %>%
+  summarise(AvgTreatVisits=mean(Treatment.Visits), AvgTreatRewards=mean(Treatment.Rewards),AvgTestVisits=mean(Test.Visits), AvgTestRewards=mean(Test.Rewards))
+
+```
+
+
+Organizing total visits by flower type
+
+Flowers: 
+
+
+
+Berry's thoughts: instead of doing if statements, create a table of flower ID (both types) and date and color, then merge that onto the columns here
+```{r}
+Full.Treatment1
+
+# create a new column for "flower.color" to go into
+Full.Treatment1$flower.color = rep(1, nrow(Full.Treatment1))
+Full.Treatment1
+# now write a 'for' loop to change the number when the bee or the date changes
+# basically just a couple of if / else statements...
+# if it is a new bee number, don't need to do anything as number should be one
+for(i in 2:nrow(Full.Treatment1)) {
+  if(Full.Treatment1$date[i]=="2018.7.11") {
+    if(Full.Treatment1$flower[i]=="50124") {
+      Full.Treatment1$flower.color[i]<-"blue"
+    }
+    else {Full.Treatment1$flower.color[i]<-"green"}
+  }
+}
+Full.Treatment1
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
