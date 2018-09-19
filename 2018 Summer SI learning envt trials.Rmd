@@ -202,10 +202,6 @@ mayyybe=left_join(Full.Data, colors, by="flower", "Day")
 
 
 
-dont think i need this...
-# create a new column for "flower.color" to go into
-Full.Treatment1$flower.color = rep(1, nrow(Full.Treatment1))
-Full.Treatment1
 
 
 

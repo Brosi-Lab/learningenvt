@@ -1,0 +1,5 @@
+﻿color,pre.post,new.color
+blue.treatment,pre,blue
+green.treatment,pre,not.blue
+blue.test,post,blue
+violet.test,post,not.blue
