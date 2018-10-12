@@ -1,10 +1,11 @@
 ---
-title: "Summer 2018 SI Learning Envt Trials"
-author: "Donna"
-date: "August 21, 2018"
-output:
-  html_document: default
+title: "Summer 2018 SI learning envt data"
+author: "Donna McDermott"
+date: "October 11, 2018"
+output: html_document
 ---
+
+This is a copy of a rmd file of the same name that was started on Aug 21st and is not in this project.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -266,7 +267,9 @@ sum.colormelt=melt(sum.colordata)
 
 #casting data
 sum.colorcast=dcast(sum.colormelt, bee + Treatment_Type+pre.post~new.color, fun.aggregate = sum)
-sum.colorcast
+#sum.colorcast
+head(sum.colorcast)
+summary(sum.colorcast)
 #there are some bees in here that only have one row. That's okay. I mean, it's annoying, but it's to be expected. The missing rows are due to 2 missing data files caused either by a computer glitch or a me glitch
 
 
@@ -280,6 +283,7 @@ summary(SIapplicationGLM2)
 
 sum.colordata for ggplot, where x=treatment (with sub-xs for treatment vs. test) and y is % change in rewards from blue vs. not blue (i.e. amount of preference for blue). see sketch from 10/3 in planner
   
+
 
 
 
