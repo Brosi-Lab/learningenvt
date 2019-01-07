@@ -277,14 +277,260 @@ summary(sum.colorcast)
 SIapplicationGLM2=glmer(cbind(blue, not.blue)~pre.post*Treatment_Type+(1|bee), family=binomial, data=sum.colorcast)
 summary(SIapplicationGLM2)
 
+a=filter(sum.colorcast, pre.post == "pre")
+SIapplicationGLM3=glmer(cbind(blue, not.blue)~Treatment_Type+(1|bee), family=binomial, data=a)
+summary(SIapplicationGLM3)
+
+#lm(x ~ y + relevel(b, ref = "3")) 
 
 ```
 
 
 sum.colordata for ggplot, where x=treatment (with sub-xs for treatment vs. test) and y is % change in rewards from blue vs. not blue (i.e. amount of preference for blue). see sketch from 10/3 in planner
   
+```{r plot}
+#putting summary stats in sum.colordata so I can plot them
+
+#head(sum.colordata)
+
+color.visits=group_by(Full.Data.All, color) %>%
+  summarise(Rewards=sum(reward.x))
+
+RewardsPerBee=sum.colordata %>%
+  group_by(Treatment_Type,pre.post, bee, new.color)%>%
+  summarise(TotalReward=sum(reward.x)) %>%
+  arrange(bee)
+
+#RewardsPerBee
+
+#need to cast this so that last two columns are blue column and not blue column
+#...in retrospect, i think i coud just use sum.colorcast, above.
+#head(sum.colorcast)
+
+RewardsPerTreatment=sum.colorcast %>%
+  mutate(BluePreference=blue/(blue+not.blue)) %>%
+  group_by(pre.post,Treatment_Type) %>%
+  summarise(AvgBluePreference=mean(BluePreference), SdBluePreference=sd(BluePreference), SumBlueRewards=sum(blue), SumTotalRewards=sum(blue+not.blue)) 
+
+#class(RewardsPerTreatment$pre.post) #factor
+RewardsPerTreatment$pre.post = factor(RewardsPerTreatment$pre.post, levels(factor(RewardsPerTreatment$pre.post))[c(2,1)])
+#below is alva's code that I used for reference in reordering factors
+#scen.frame$rc = factor(scen.frame$rc,levels(factor(scen.frame$rc))[c(1,4,2,5,3,6)])
+
+#now reordering hard and easy so they're the right colors.
+RewardsPerTreatment$Treatment_Type = factor(RewardsPerTreatment$Treatment_Type, levels(factor(RewardsPerTreatment$Treatment_Type))[c(1,3,2)])
+
+dodge <- position_dodge(width = 0.9)
+
+g1 <- ggplot(data = RewardsPerTreatment, aes(x = Treatment_Type, y = AvgBluePreference, fill=factor(pre.post))) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  theme_classic() 
+  
+g1
+  
+#geom_errorbar(aes(ymax = AvgBluePreference+SdBluePreference, ymin = AvgBluePreference-SdBluePreference), position = dodge, width = 0.2)
 
 
+
+```
+
+```{r}
+
+#calculating confidence intervals
+require(binom)
+RpTconfint=binom.confint(x=RewardsPerTreatment$SumBlueRewards, n=RewardsPerTreatment$SumTotalRewards, conf.level=.95, methods = "agresti-coull")
+RpTconfint
+#selecting the upper and lower bounds from the conf int table to add to RewardsPerTreatment
+RpTUpLow=select(RpTconfint, lower, upper )
+RewardsPerTreatment=bind_cols(RewardsPerTreatment,RpTUpLow)
+
+#plot 2- berry's aesthetic
+
+plot2 <- ggplot(RewardsPerTreatment, aes(color = Treatment_Type, y = AvgBluePreference, x = pre.post))
+plot2 <- plot2 + geom_point() + geom_line(aes(group = Treatment_Type)) 
+plot2 = plot2 + labs(x="Pre v Post", y="Proportion of Visits to Blue Flowers")
+plot2= plot2 + theme_classic() + geom_errorbar(aes(ymin=AvgBluePreference-lower, ymax=AvgBluePreference+upper))
+
+
+plot3 <- ggplot(RewardsPerTreatment, aes(color = Treatment_Type, y = AvgBluePreference, x = pre.post))
+plot3 <- plot3 + geom_point() + geom_line(aes(group = Treatment_Type)) 
+plot3 = plot3 + labs(x="Pre v Post", y="Proportion of Visits to Blue Flowers")
+plot3= plot3 + theme_classic() 
+
+#adding in confidence intervals
+#plot2=plot2+ geom_pointrange(x, y, ymin, ymax, alpha, color, fill, linetype,
+#shape, size)
+
+
+plot3
+
+plot2
+
+
+
+```
+
+rerun GLMM with nested random effects
+take CI out of this figure, but keep this figure at the end of the talk
+maybe plot by bee with big bold trend lines for the groups (the data above)
+
+
+#Permutation Tests for Pre data
+
+Are the pre values significantly different than 50% visitation to blue flower?
+```{r}
+
+
+#making table of blue=success for all treatments
+
+  #making table for translation that blue=success
+success_table=read.csv("blue.success.csv")
+success_table
+
+success_colordata= colordata %>%
+  select(Treatment_Type, reward.x, pre.post, new.color) %>%
+  filter(reward.x==1) %>%
+  filter(pre.post=="pre") %>%
+  left_join(success_table, by="new.color")
+
+#making control data vector
+control_colordata= success_colordata %>%
+  filter(Treatment_Type=="control")
+control_vector=control_colordata$blue.success
+#n=167
+
+#making hard data vector
+hard_colordata= success_colordata %>%
+  filter(Treatment_Type=="hard")
+hard_vector=hard_colordata$blue.success
+#n=182
+
+#making easy data vector
+easy_colordata= success_colordata %>%
+  filter(Treatment_Type=="easy")
+easy_vector=easy_colordata$blue.success
+#n=209
+
+#actual permutation test for control data
+#this is two-tailed and should give z score and  p value
+
+  #making binomial distribution with mean of .5
+control_null=rbinom(n=167, prob=0.5, size=1)
+
+require(coin)
+control_perm=independence_test(control_vector ~ control_null)
+control_perm
+
+#	Asymptotic General Independence Test
+
+#data:  control_vector by control_null
+#Z = -0.34138, p-value = 0.7328
+#alternative hypothesis: two.sided
+
+
+#actual permutation test for hard data
+hard_null=rbinom(n=182, prob=0.5, size=1)
+
+hard_perm=independence_test(hard_vector ~ hard_null)
+hard_perm
+
+#	Asymptotic General Independence Test
+
+#data:  hard_vector by hard_null
+#Z = 0.94201, p-value = 0.3462
+#alternative hypothesis: two.sided
+
+#actual permutation test for easy data
+easy_null=rbinom(n=209, prob=0.5, size=1)
+
+easy_perm=independence_test(easy_vector ~ easy_null)
+easy_perm
+
+#	Asymptotic General Independence Test
+
+#data:  easy_vector by easy_null
+#Z = -2.0294, p-value = 0.04241
+#alternative hypothesis: two.sided
+
+#plotting the three of these
+
+```
+
+
+#Permutation tests for Post Data
+
+
+Were bees foraging nonrandomly on test days?
+```{r}
+
+
+
+post_success_colordata= colordata %>%
+  select(Treatment_Type, reward.x, pre.post, new.color) %>%
+  filter(reward.x==1) %>%
+  filter(pre.post=="post") %>%
+  left_join(success_table, by="new.color")
+
+#making control data vector
+post_control_colordata= post_success_colordata %>%
+  filter(Treatment_Type=="control")
+post_control_vector=post_control_colordata$blue.success
+#n=197
+
+#making hard data vector
+post_hard_colordata= post_success_colordata %>%
+  filter(Treatment_Type=="hard")
+post_hard_vector=post_hard_colordata$blue.success
+#n=190
+
+#making easy data vector
+post_easy_colordata= post_success_colordata %>%
+  filter(Treatment_Type=="easy")
+post_easy_vector=post_easy_colordata$blue.success
+#n=170
+
+#actual permutation test for control data
+#this is two-tailed and should give z score and  p value
+
+  #making binomial distribution with mean of .5
+post_control_null=rbinom(n=197, prob=0.5, size=1)
+
+post_control_perm=independence_test(post_control_vector ~ post_control_null)
+post_control_perm
+
+#	Asymptotic General Independence Test
+
+#data:  post_control_vector by post_control_null
+#Z = 2.0115, p-value = 0.04427
+#alternative hypothesis: two.sided
+
+
+
+#actual permutation test for hard data
+post_hard_null=rbinom(n=190, prob=0.5, size=1)
+
+post_hard_perm=independence_test(post_hard_vector ~ post_hard_null)
+post_hard_perm
+
+#	Asymptotic General Independence Test
+
+#data:  post_hard_vector by post_hard_null
+#Z = 0.20641, p-value = 0.8365
+#alternative hypothesis: two.sided
+
+#actual permutation test for easy data
+post_easy_null=rbinom(n=170, prob=0.5, size=1)
+
+post_easy_perm=independence_test(post_easy_vector ~ post_easy_null)
+post_easy_perm
+
+#	Asymptotic General Independence Test
+
+#data:  post_easy_vector by post_easy_null
+#Z = 0.68307, p-value = 0.4946
+#alternative hypothesis: two.sided
+
+```
 
 
 
