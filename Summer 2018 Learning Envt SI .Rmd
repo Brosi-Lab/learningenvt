@@ -530,6 +530,11 @@ post_easy_perm
 #Z = 0.68307, p-value = 0.4946
 #alternative hypothesis: two.sided
 
+#perm_summary=read.csv("PermutationTestPvaluesSummerFCdata.csv")
+#?
+#pre.post	control	easy	  hard
+#pre	    0.7328	0.04241	0.3462
+#post	    0.04427	0.4996	0.8365
 ```
 
 
