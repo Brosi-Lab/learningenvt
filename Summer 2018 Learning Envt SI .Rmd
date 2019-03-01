@@ -346,10 +346,26 @@ RewardsPerTreatment=bind_cols(RewardsPerTreatment,RpTUpLow)
 
 #plot 2- berry's aesthetic
 
+pd <- position_dodge(width = 0.1)
+
 plot2 <- ggplot(RewardsPerTreatment, aes(color = Treatment_Type, y = AvgBluePreference, x = pre.post))
-plot2 <- plot2 + geom_point() + geom_line(aes(group = Treatment_Type)) 
+plot2 <- plot2 + geom_point(position=pd) + geom_line(aes(group = Treatment_Type), position=pd) 
 plot2 = plot2 + labs(x="Pre v Post", y="Proportion of Visits to Blue Flowers")
-plot2= plot2 + theme_classic() + geom_errorbar(aes(ymin=AvgBluePreference-lower, ymax=AvgBluePreference+upper))
+plot2= plot2 + theme_classic() + geom_errorbar(aes(ymin=lower, ymax=upper, width=.1), position=pd) + coord_cartesian(xlim = c(1.4,2.2), ylim = c(0.4,0.8))
+
+
+plot2
+
+#offsetting the error bars example from stack exchange
+#pd <- position_dodge(width = 0.4)
+
+#ggplot(YearlyDensity, aes(x = Year, y = mean, colour = Station, group = Station)) +
+#  geom_errorbar(aes(ymin = mean-se, ymax = mean+se),
+#                colour = "black", width = 0.2, position = pd) +
+#  geom_line(size = .8, position = pd) +
+#  geom_point(size = 4, shape = 18, position = pd) +
+
+
 
 
 plot3 <- ggplot(RewardsPerTreatment, aes(color = Treatment_Type, y = AvgBluePreference, x = pre.post))
@@ -364,9 +380,8 @@ plot3= plot3 + theme_classic()
 
 plot3
 
-plot2
 
-
+#make error bars narrower. show blue and green first, then layer in red.
 
 ```
 
@@ -397,6 +412,7 @@ success_colordata= colordata %>%
 control_colordata= success_colordata %>%
   filter(Treatment_Type=="control")
 control_vector=control_colordata$blue.success
+control_vector
 #n=167
 
 #making hard data vector
@@ -536,6 +552,9 @@ post_easy_perm
 #pre	    0.7328	0.04241	0.3462
 #post	    0.04427	0.4996	0.8365
 ```
-
-
+re-do it
+berry suggests doing simulation mself. create binomail null vector and re-run it 9999 times (creating my own vector of proportions). then plot proportions as a histogram, then plot your one empirical proportion. the x location of that line is its value. p value is the rank of my data point (how many are bigger) relative to distribution.
+or do a x2 test
+expectation is total number of visits split 50% into blue and 50% into not blue. (if n is odd, put bigger number with bigger observed value)
+observed is the actual number of blue vists and not blue visits. 
 
