@@ -1,0 +1,424 @@
+---
+title: "Spring 2019 Learning envt SI NN"
+author: "Donna McDermott"
+date: "April 22, 2019"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(root.dir='/tmp')
+setwd("/Users/drmcder/Desktop/R/Learning Environment Bees")
+require(ggplot2)
+require(dplyr)
+require(readr)
+require(tidyr)
+require(reshape2)
+require(lme4)
+getwd()
+```
+This data was collected in April of 2019 as a follow up on last summer's social information experiment. In this experiment as in the last one, bees were tasked with foraging on two flowers over two days. On day one, their flower choices were blue (rewarding) or green (water). On day two, the same bees were placed in the same enclosures to forage on either blue (still the samelevel of reward) or purple (equally rewarding) flowers. Again, bees were assigned to different treatments with different social information cues on day one: honest (model bee on blue flower), misleading (model bee on green flower), or control (no model bee.) However, the change from my last experiments is that, this time, bees were in one of two treatments for 3 days preceding the trial: neonic-exposed and not neonic exposed. Neonic exposure (10 ppb) was through their ad. lib. supply of 1 M nectar.
+Bees were taken from one of two different colonies. Both day 1 and day 2 foraging bouts lasted for 30 minutes, bees were tested independently, and 7 or 8 trials ran simulateously in the chamber at one time. 
+In the colony (before testing) all bees were fed ad lib Koppert nectar solution and commercial pollen. Bees were starved for a minimim of two hours before entering foraging chamber.
+
+Data from the 2 colonies we recieved on 2/5/19 (which were tested in the foraging chamber in March) are not included in this analysis. This is because those colonies died ~3 weeks into the experiment, with considerable decline beforehand. In early/mid march, the queens in both colonies stopped laying eggs. Soon afterwards, most bees stopped foraging when in the foraging chamber. Laura Avila and I have talked a lot about what might have happened to these colonies. I think it's most likely that the bees came in with some sort of pathogen, which spread to the other colony. We cleaned every surface we could think of with bleach before setting up the colonies we received on 3/26/19. So far, these 3/26 colonies don't exhibit the same failure to thrive.
+
+```{r knitting data}
+#importing and naming each data set
+
+#Treatments
+Tr.1416=read.csv("foragingdata_2019.4.1.1416.csv")
+colnames(Tr.1416) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1506=read.csv("foragingdata_2019.4.1.1506.csv")
+colnames(Tr.1506) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1557=read.csv("foragingdata_2019.4.1.1557.csv")
+colnames(Tr.1557) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1636=read.csv("foragingdata_2019.4.1.1636.csv")
+colnames(Tr.1636) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1141=read.csv("foragingdata_2019.4.11.1141.csv")
+colnames(Tr.1141) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1240=read.csv("foragingdata_2019.4.11.1240.csv")
+colnames(Tr.1240) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1340=read.csv("foragingdata_2019.4.11.1340.csv")
+colnames(Tr.1340) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1327=read.csv("foragingdata_2019.4.15.1327.csv")
+colnames(Tr.1327) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1408=read.csv("foragingdata_2019.4.15.1408.csv")
+colnames(Tr.1408) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1447=read.csv("foragingdata_2019.4.15.1447.csv")
+colnames(Tr.1447) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1538=read.csv("foragingdata_2019.4.15.1538.csv")
+colnames(Tr.1538) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1623=read.csv("foragingdata_2019.4.15.1623.csv")
+colnames(Tr.1623) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1324=read.csv("foragingdata_2019.4.18.1324.csv")
+colnames(Tr.1324) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1404=read.csv("foragingdata_2019.4.18.1404.csv")
+colnames(Tr.1404) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1450=read.csv("foragingdata_2019.4.18.1450.csv")
+colnames(Tr.1450) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Tr.1538=read.csv("foragingdata_2019.4.18.1538.csv")
+colnames(Tr.1538) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+#Tests
+Te.1404=read.csv("foragingdata_2019.4.2.1404.csv")
+colnames(Te.1404) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1455=read.csv("foragingdata_2019.4.2.1455.csv")
+colnames(Te.1455) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1544=read.csv("foragingdata_2019.4.2.1544.csv")
+colnames(Te.1544) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1644=read.csv("foragingdata_2019.4.2.1644.csv")
+colnames(Te.1644) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1247=read.csv("foragingdata_2019.4.12.1247.csv")
+colnames(Te.1247) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1350=read.csv("foragingdata_2019.4.12.1350.csv")
+colnames(Te.1350) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1432=read.csv("foragingdata_2019.4.12.1432.csv")
+colnames(Te.1432) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1430=read.csv("foragingdata_2019.4.16.1430.csv")
+colnames(Te.1430) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1509=read.csv("foragingdata_2019.4.16.1509.csv")
+colnames(Te.1509) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1550=read.csv("foragingdata_2019.4.16.1550.csv")
+colnames(Te.1550) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1629=read.csv("foragingdata_2019.4.16.1629.csv")
+colnames(Te.1629) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1710=read.csv("foragingdata_2019.4.16.1710.csv")
+colnames(Te.1710) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1440=read.csv("foragingdata_2019.4.19.1440.csv")
+colnames(Te.1440) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1518=read.csv("foragingdata_2019.4.19.1518.csv")
+colnames(Te.1518) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1604=read.csv("foragingdata_2019.4.19.1604.csv")
+colnames(Te.1604) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+Te.1702=read.csv("foragingdata_2019.4.19.1702.csv")
+colnames(Te.1702) = c("date", "t.day", "flower", "bee", "t.forage", "reward")
+
+#knitting together data sets into "treatment" files 
+Full.Treatment1=rbind(Tr.1416,Tr.1506,Tr.1557,Tr.1636,Tr.1141,Tr.1240,Tr.1340,Tr.1327,Tr.1408,Tr.1447,Tr.1538,Tr.1623,Tr.1324,Tr.1404,Tr.1450,Tr.1538)
+
+#knitting together data sets into "test" files
+Full.Test1=rbind(Te.1404,Te.1455,Te.1544,Te.1644,Te.1247,Te.1350,Te.1432,Te.1430,Te.1509,Te.1550,Te.1629,Te.1710,Te.1440,Te.1518,Te.1604,Te.1702)
+
+#removing tester flower from both data sets
+Full.Treatment1 =filter(Full.Treatment1, bee !="8E-29-66-01-0B-00-12-E0")
+Full.Test1 =filter(Full.Test1, bee !="8E-29-66-01-0B-00-12-E0")
+Full.Treatment1 =filter(Full.Treatment1, bee !="A2-25-66-01-0B-00-12-E0")
+Full.Test1 =filter(Full.Test1, bee !="A2-25-66-01-0B-00-12-E0")
+```
+
+Adding in Bee ID data csv
+This spreadsheet has info on the home colonies and treatments (both neonic and social cue) used for each bee.
+
+  Note that this data has been transformed in Excel. First, i removed bees that dies between day 1 and day 2 trials (there were 2-3 of these, they are struck through in the original spreadsheet "Bee ID Data" on Brosi Lab Google Drive.) The RFID tag reader in the flowers and the RFID tag reader in the pen (which we use for manual input before trials) records the flower ID somewhat differently. The flower tag has dashes within the tag ID number e.g. "CE-28-66-01-0B-00-12-E0" but the pen would record the same tag as "CE 28 66 01 0B 00 00 00." I've used an excel formula in the column "bee" so that my pen readings in this spreadsheet are compatible with the foraging chamber data. Excel formula is:
+  =LEFT(B2,2)&"-"&MID(B2,4,2)&"-"&MID(B2,7,2)&"-"&MID(B2,10,2)&"-"&MID(B2,13,2)&"-"&MID(B2,16,2)&"-"&"12"&"-"&"E0"
+
+```{r BEE ID info}
+
+BeeData=read.csv("MarApr2019_dashes_Bombus ID Data.csv")
+#tbl_df(BeeData)
+Simp_BeeData=select(BeeData, Enclosure, bee, Colony, Neonic, Treatment_Type) %>%
+  slice(1:127)
+
+```
+
+
+
+
+#How many visits did each bee make in its half hour treatment or test?
+
+```{r}
+
+#counting visits and rewards during Treatment runs
+#tbl_df(Full.Treatment1)
+Total.visits=count(Full.Treatment1, bee)
+#Total.visits
+Total_Rewards=Full.Treatment1%>%
+  group_by(bee) %>%
+  summarise(Rewards=sum(reward))
+#Total_Rewards  
+
+#Total_Rewards
+Total_RV=left_join(Total.visits, Total_Rewards, by="bee")
+index = which(is.na(Total_RV$Rewards))
+Total_RV = Total_RV[-index,]
+colnames(Total_RV)=c("bee", "Treatment.Visits", "Treatment.Rewards")
+#Total_RV
+
+#Counting visits and rewards during test runs
+tbl_df(Full.Test1)
+Total.visitsT=count(Full.Test1, bee)
+#Total.visitsT
+Total_RewardsT=Full.Test1%>%
+  group_by(bee) %>%
+  summarise(Rewards=sum(reward))
+#Total_RewardsT  
+
+#Total_RewardsT
+Total_RV_T=left_join(Total.visitsT, Total_RewardsT, by="bee")
+index = which(is.na(Total_RV_T$Rewards))
+Total_RV_T = Total_RV_T[-index,]
+colnames(Total_RV_T)=c("bee", "Test.Visits", "Test.Rewards")
+#Total_RV_T
+
+
+AllVisits=full_join(Total_RV,Total_RV_T, by="bee") %>% filter(Treatment.Visits>0, Test.Visits>0)              # <--------------this makes it so you only test bees which forage on both days. to test all bees, delete this.
+#AllVisits
+
+
+AllBeeData=full_join(AllVisits, Simp_BeeData, by="bee") %>% filter(Treatment.Visits>0, Test.Visits>0)     
+
+AllBeeData=group_by(AllBeeData,bee)
+#BeeData
+select(AllBeeData, bee:Treatment_Type) %>%
+  group_by(Neonic,Treatment_Type) %>%
+  summarise(AvgTreatVisits=mean(Treatment.Visits), AvgTreatRewards=mean(Treatment.Rewards),AvgTestVisits=mean(Test.Visits), AvgTestRewards=mean(Test.Rewards))
+```
+
+Thoughts: there are a lot of bees that are in BeeData with an enclosure number, etc. (127 of them) but far fewer bees (53) that show up in All Visits. I think that's because bees which never forage don't appear on the computer's data files (the ones automatically generated by the RFID tag readers.) Which means that every NA in AllBeeData (all the bees between 53 and 127) should be 0s. I've double checked, and I'm not missing any data files. A few bees were treated but not tested (like 5 or so) but that doens't explain the discrepancy, either. Also, there are no 0s in All Visits.
+
+Ugh but actually that doesn't make a ton of sense either, becuase it means that bees either foraged during both test and treatment OR they never foraged on either day. There are no bees that foraged one day and not another. So i'm going to try removing the NA bees and see if that makes more sense.
+GOing back to the AllVisits data just before doing #%>% filter(Test.Visits>0), there are ~19 bees that are treated but not tested. Which is weird becuase Total_RV_T (which groups by bee for all test day files) has 69 bees, not 72-19=53 bees.
+
+I re-made AllVisits with a full_join instead of a left_join. This means that there are ~19 bees that have data for treatment but not test, and ~16 that have data for test but not treatment. Presumably, these NAs are 0s becuase those bees didn't forage on one day or another. I can check this in the R metadata. 
+
+So, my options are to only evaluate bees which foraged on both days (53 bees total) or evaluate all bees, regardless of whether or not they foraged on 0,1, or 2 days (127 bees). My summer analysis used option 1. I'll try both, here, starting with bees that def foraged on both days (so, same as last time)
+
+#Organizing total visits by flower type
+
+Note again: The flower set up this time is exactly the same as the flower set up over the summer 2018.
+
+```{r Flower color to GLM}
+#Adding in table of types of day (test v treatment) to data
+
+Full.Data=rbind(Full.Treatment1, Full.Test1)
+dayDate= select(Full.Data,date) %>%
+  distinct(date) %>% 
+  slice(c(1,3,4,6,7,8,9,10))
+#Full.Data
+
+Day=c("treatment","treatment","treatment","treatment","test","test","test","test")
+dayDate=cbind(dayDate,Day)
+#dayDate
+
+colors=read.csv("Flower color data Summer SI learning envt trials.csv")
+names(colors) <- c("flower", "reader", "Day", "color", "reward")
+#colors
+
+#need to join dayDate to full trial, then join treatment types and colors to all of that
+
+Full.Data=left_join(Full.Data,dayDate,by="date") 
+#%>% select(-Days)
+colnames(Full.Data)[colnames(Full.Data)=="Day.x"] <- "Day"
+#Full.Data
+
+#adding in treatment types
+Full.Data.Treatments=full_join(Full.Data, Simp_BeeData, by="bee") 
+index = which(is.na(Full.Data.Treatments$t.forage))
+Full.Data.Treatments = Full.Data.Treatments[-index,]
+#this indexing and removal is to remove bees which did not forage on both days.
+
+#adding in colors
+Full.Data.Colors=merge(Full.Data.Treatments, colors, by=c("flower", "Day"), all=TRUE)
+#Full.Data.Colors= Full.Data.Colors[1:39600,]
+#the arranging that happens here puts all the "WARNING" rows at the end of the spreadsheet. it also adds two rows, for reasons unknown. I sliced off the end of the data set to remove the WARNING rows
+#Full.Data.Colors is the MOST comprehensive data set (includes more columns and a few NA values)
+
+Full.Data.All= select(Full.Data.Colors, bee, Neonic, Treatment_Type, reward.x, color, Day)
+index = which(is.na(Full.Data.All))
+Full.Data.All = Full.Data.All[-index,]
+#Full.Data.All
+#Full.Data.All removes NA's and focuses in on columns of interest.
+
+#sum of rewards bees got from each color
+color.visits=group_by(Full.Data.All, color) %>%
+  summarise(Rewards=sum(reward.x))
+#color.visits
+
+#making a table of colors and treatments to make analysis easier later
+color.treatments=read.csv("color.treatments.csv")
+color.treatments=tbl_df(color.treatments)
+#color.treatments
+#merging that table onto the full data
+colordata=full_join(Full.Data.All, color.treatments, by="color")
+#colordata
+#summarizing that full data by summing up the rewards for each treatment type
+sum.colordata=colordata  %>% 
+  group_by(Neonic,Treatment_Type, color) %>% 
+  summarise(sums=sum(reward.x))
+#sum.colordata
+#There's some issue with sum.colordata, here, where it doesn't include the violet and green visits in the "hard" treatment. It does if you only group by treatment type and color, but then it loses them when you sum up the rewards.
+
+treatment.summaries=spread(sum.colordata, color, sums)
+#treatment.summaries
+#index = which(is.na(treatment.summaries))
+#treatment.summaries = treatment.summaries[-index,]
+#treatment.summaries=select(treatment.summaries, blue.test, blue.treatment,green.treatment,violet.test)
+#treatment.summaries
+
+
+#trying to melt data using reshape2
+sum.colordata=select(colordata, bee, Neonic, Treatment_Type, reward.x, pre.post, new.color)
+#sum.colordata
+#sum.colordata is the rawest data that shows all of and each bee-flower visit.
+#colorcast=dcast(sum.colordata, bee + Treatment_Type+pre.post~reward.x+new.color, fun.aggregate = sum)
+#trying to just cast without melting did not work, even when I removes "reward.x"
+
+sum.colormelt=melt(sum.colordata)
+#sum.colormelt
+
+#tessstcast=dcast(tessstmelt, bee + Treatment_Type+pre.post~new.color, value.var = "value")
+#this line was me trying to cast and getting mangled
+
+#sum.colormelt = sum.colormelt[1:39598,]
+#this was needed becuase the melt produced a bunch of extra empty rows. but after I came back and edited this code, I removed the empty rows (the "WARNING" rows) much earlier, so it isn't needed any more
+
+#casting data
+sum.colorcast=dcast(sum.colormelt, bee + Neonic+ Treatment_Type+pre.post~new.color, fun.aggregate = sum)
+#sum.colorcast
+head(sum.colorcast)
+summary(sum.colorcast)
+#there are some bees in here that only have one row. That's okay. I mean, it's annoying, but it's to be expected. The missing rows are due to 2 missing data files caused either by a computer glitch or a me glitch
+
+
+#GLMing data
+NNapplicationGLM2=glmer(cbind(blue, not.blue)~pre.post*Neonic+(1|bee), family=binomial, data=sum.colorcast)
+summary(NNapplicationGLM2)
+
+NNxSIapplicationGLM2=glmer(cbind(blue, not.blue)~pre.post*Neonic*Treatment_Type+(1|bee), family=binomial, data=sum.colorcast)
+summary(NNxSIapplicationGLM2)
+
+a=filter(sum.colorcast, pre.post == "pre")
+SIapplicationGLM3=glmer(cbind(blue, not.blue)~Treatment_Type+(1|bee), family=binomial, data=a)
+summary(SIapplicationGLM3)
+
+#lm(x ~ y + relevel(b, ref = "3")) 
+```
+
+
+
+#graphs on graphs
+
+```{r graphs and CIs}
+
+#putting summary stats in sum.colordata so I can plot them
+
+#head(sum.colordata)
+
+color.visits=group_by(Full.Data.All, color) %>%
+  summarise(Rewards=sum(reward.x))
+
+RewardsPerBee=sum.colordata %>%
+  group_by(Treatment_Type,pre.post, bee, new.color)%>%
+  summarise(TotalReward=sum(reward.x)) %>%
+  arrange(bee)
+
+#RewardsPerBee
+
+#need to cast this so that last two columns are blue column and not blue column
+#...in retrospect, i think i coud just use sum.colorcast, above.
+#head(sum.colorcast)
+
+Combo=read.csv("NN_SI_Combo.csv")
+
+RewardsPerTreatment=sum.colorcast %>%
+  mutate(BluePreference=blue/(blue+not.blue)) %>%
+  group_by(pre.post,Neonic,Treatment_Type) %>%
+  summarise(AvgBluePreference=mean(BluePreference), SdBluePreference=sd(BluePreference), SumBlueRewards=sum(blue), SumTotalRewards=sum(blue+not.blue)) %>%
+  filter (SumBlueRewards>0)
+
+RewardsPerTreatment1=left_join(sum.colorcast,Combo,by=c("Neonic","Treatment_Type"))
+RewardsPerTreatment2= RewardsPerTreatment1 %>%
+  mutate(BluePreference=blue/(blue+not.blue))  %>%
+  group_by(pre.post,Combo) %>% 
+  mutate(N=n()) %>%
+  group_by(pre.post,Combo,N) %>%      #i did this to keep N as a column
+  summarise(AvgBluePreference=mean(BluePreference), SdBluePreference=sd(BluePreference), SumBlueRewards=sum(blue), SumTotalRewards=sum(blue+not.blue)) %>%
+  filter (SumBlueRewards>0)
+
+#########
+
+
+#calculating confidence intervals
+require(binom)
+RpTconfint=binom.confint(x=RewardsPerTreatment2$SumBlueRewards, n=RewardsPerTreatment2$SumTotalRewards, conf.level=.95, methods = "agresti-coull")
+RpTconfint
+#selecting the upper and lower bounds from the conf int table to add to RewardsPerTreatment
+RpTUpLow=select(RpTconfint, lower, upper )
+RewardsPerTreatment2=bind_cols(RewardsPerTreatment2,RpTUpLow)
+
+#plot 2- berry's aesthetic
+
+pd <- position_dodge(width = 0.1)
+
+plot2 <- ggplot(RewardsPerTreatment2, aes(color = Combo, y = AvgBluePreference, x = pre.post))
+plot2 <- plot2 + geom_point(position=pd) + geom_line(aes(group = Combo), position=pd) 
+plot2 = plot2 + labs(x="Pre v Post", y="Proportion of Visits to Blue Flowers")
+plot2= plot2 + theme_classic() + geom_errorbar(aes(ymin=lower, ymax=upper, width=.1), position=pd) + coord_cartesian(xlim = c(1.4,2.2), ylim = c(0.1,1.0))
+
+
+plot2
+
+#offsetting the error bars example from stack exchange
+#pd <- position_dodge(width = 0.4)
+
+#ggplot(YearlyDensity, aes(x = Year, y = mean, colour = Station, group = Station)) +
+#  geom_errorbar(aes(ymin = mean-se, ymax = mean+se),
+#                colour = "black", width = 0.2, position = pd) +
+#  geom_line(size = .8, position = pd) +
+#  geom_point(size = 4, shape = 18, position = pd) +
+
+
+
+
+#plot3 <- ggplot(RewardsPerTreatment, aes(color = Treatment_Type, y = AvgBluePreference, x = pre.post))
+#plot3 <- plot3 + geom_point() + geom_line(aes(group = Treatment_Type)) 
+#plot3 = plot3 + labs(x="Pre v Post", y="Proportion of Visits to Blue Flowers")
+#plot3= plot3 + theme_classic() 
+
+#adding in confidence intervals
+#plot2=plot2+ geom_pointrange(x, y, ymin, ymax, alpha, color, fill, linetype,
+#shape, size)
+
+
+#plot3
+
+
+#make error bars n
+
+
+```
+
+
+
